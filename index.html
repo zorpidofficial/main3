@@ -1,595 +1,844 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lab Price Analysis System</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --bg: #f8f9fa;
-            --border: #e0e0e0;
-            --text-main: #333;
-            --text-small: #666;
-            --white: #ffffff;
-        }
+      :root {
+        --primary: #2c3e50;
+        --accent: #3498db;
+        --bg: #f8f9fa;
+        --border: #e0e0e0;
+        --text-main: #333;
+        --text-small: #666;
+        --white: #ffffff;
+      }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 20px;
-        }
+      * {
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
 
-        .container {
-            width: 100%;
-            max-width: 1100px;
-            background: var(--white);
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
+      body {
+        background-color: var(--bg);
+        color: var(--text-main);
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 20px;
+      }
 
-        h1 { font-size: 1.4rem; text-align: center; margin-bottom: 20px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+      .container {
+        width: 100%;
+        max-width: 1100px;
+        background: var(--white);
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
 
-        /* Search Section */
-        .search-container {
-            position: relative;
-            margin-bottom: 20px;
-        }
+      h1 {
+        font-size: 1.4rem;
+        text-align: center;
+        margin-bottom: 20px;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 10px 15px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 0.85rem;
-            outline: none;
-        }
+      /* Search Section */
+      .search-container {
+        position: relative;
+        margin-bottom: 20px;
+      }
 
-        .dropdown-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid var(--border);
-            border-top: none;
-            z-index: 100;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-        }
+      input[type="text"] {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 0.85rem;
+        outline: none;
+      }
 
-        .dropdown-item {
-            padding: 8px 15px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
+      .dropdown-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid var(--border);
+        border-top: none;
+        z-index: 100;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+      }
 
-        .dropdown-item:hover { background: #f0f7ff; }
+      .dropdown-item {
+        padding: 8px 15px;
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
 
-        /* Selected Tags */
-        .tags-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
+      .dropdown-item:hover {
+        background: #f0f7ff;
+      }
 
-        .tag {
-            background: #e1ecf4;
-            color: #39739d;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+      /* Selected Tags */
+      .tags-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
 
-        .tag a { color: var(--accent); text-decoration: none; font-weight: bold; }
-        .tag .remove { cursor: pointer; color: #c0392b; font-weight: bold; margin-left: 5px; }
+      .tag {
+        background: #e1ecf4;
+        color: #39739d;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
 
-        /* Filters Section */
-        .controls-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-            padding: 15px;
-            background: #fdfdfd;
-            border: 1px solid #eee;
-            border-radius: 6px;
-        }
+      .tag a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .tag .remove {
+        cursor: pointer;
+        color: #c0392b;
+        font-weight: bold;
+        margin-left: 5px;
+      }
 
-        .filter-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 0.7rem; font-weight: bold; color: var(--text-small); text-transform: uppercase; }
-        select { padding: 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; }
+      /* Filters Section */
+      .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+        padding: 15px;
+        background: #fdfdfd;
+        border: 1px solid #eee;
+        border-radius: 6px;
+      }
 
-        /* Active Labs Section */
-        .active-labs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
-        .lab-chip {
-            background: var(--primary);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .lab-chip span { cursor: pointer; opacity: 0.8; }
-        .lab-chip span:hover { opacity: 1; }
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      label {
+        font-size: 0.7rem;
+        font-weight: bold;
+        color: var(--text-small);
+        text-transform: uppercase;
+      }
+      select {
+        padding: 6px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 0.8rem;
+      }
 
-        /* Buttons */
-        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        button {
-            padding: 8px 16px;
-            font-size: 0.75rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-        .btn-toggle { background: #eee; color: #555; }
-        .btn-download { background: #27ae60; color: white; }
-        button:hover { opacity: 0.9; }
+      /* Active Labs Section */
+      .active-labs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+      .lab-chip {
+        background: var(--primary);
+        /* background: #000; */
+        color: white;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .lab-chip span {
+        cursor: pointer;
+        opacity: 0.8;
+      }
+      .lab-chip span:hover {
+        opacity: 1;
+      }
 
-        /* Table Design */
-        .table-section { margin-top: 20px; overflow-x: auto; }
-        h2 { font-size: 0.9rem; margin: 15px 0 10px; color: var(--primary); border-left: 3px solid var(--accent); padding-left: 10px; }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.75rem;
-            margin-bottom: 20px;
-        }
+      /* Buttons */
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+      button {
+        padding: 8px 16px;
+        font-size: 0.75rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.2s;
+      }
+      .btn-toggle {
+        background: #eee;
+        color: #555;
+      }
+      .btn-download {
+        background: #27ae60;
+        color: white;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
 
-        th {
-            background: #f2f2f2;
-            text-align: left;
-            padding: 10px;
-            border: 1px solid var(--border);
-            text-transform: uppercase;
-            color: #555;
-        }
+      /* Table Design */
+      .table-section {
+        margin-top: 20px;
+        overflow-x: auto;
+      }
+      h2 {
+        font-size: 0.9rem;
+        margin: 15px 0 10px;
+        color: var(--primary);
+        border-left: 3px solid var(--accent);
+        padding-left: 10px;
+      }
 
-        td {
-            padding: 10px;
-            border: 1px solid var(--border);
-        }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+        margin-bottom: 20px;
+      }
 
-        .total-row { background: #fffde7; font-weight: bold; }
-        .percent-badge {
-            background: #e8f5e9;
-            color: #2e7d32;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 0.65rem;
-        }
+      th {
+        background: #f2f2f2;
+        text-align: left;
+        padding: 10px;
+        border: 1px solid var(--border);
+        text-transform: uppercase;
+        color: #555;
+      }
 
-        .hidden { display: none; }
+      td {
+        padding: 10px;
+        border: 1px solid var(--border);
+      }
+
+      .total-row {
+        background: #fffde7;
+        font-weight: bold;
+      }
+      .percent-badge {
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-size: 0.65rem;
+      }
+
+      .hidden {
+        display: none;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Zorpid Diagnostics Pricing System</h1>
 
-<div class="container">
-    <h1>Lab Pricing System</h1>
-
-    <!-- Search Section -->
-    <div class="search-container">
-        <input type="text" id="testSearch" placeholder="Search and select tests (e.g. CBC, KFT)..." autocomplete="off">
+      <!-- Search Section -->
+      <div class="search-container">
+        <input
+          type="text"
+          id="testSearch"
+          placeholder="Search and select tests (e.g. CBC, KFT)..."
+          autocomplete="off"
+        />
         <div id="dropdown" class="dropdown-results"></div>
-    </div>
+      </div>
 
-    <!-- Selected Tests -->
-    <div id="selectedTags" class="tags-container"></div>
+      <!-- Selected Tests -->
+      <div id="selectedTags" class="tags-container"></div>
 
-    <!-- Filters -->
-    <div class="controls-grid">
+      <!-- Filters -->
+      <div class="controls-grid">
         <!-- B2B Lab Controls -->
         <div class="filter-group">
-            <label>Add B2B Lab</label>
-            <select id="b2bSelect">
-                <option value="">Select Lab...</option>
-                <option value="Prognosis">Prognosis</option>
-                <option value="Healthians">Healthians</option>
-            </select>
+          <label>Diagnostics Partner Labs (DPL)</label>
+          <select id="b2bSelect">
+            <option value="">Select Lab...</option>
+            <option value="Prognosis">Prognosis</option>
+            <option value="Healthians">Healthians</option>
+          </select>
         </div>
 
         <div class="filter-group">
-            <label>Tier (B2B)</label>
-            <select id="tierFilter">
-                <option value="6">Tier 6</option>
-                <option value="5">Tier 5</option>
-            </select>
+          <label>Tier (DPL)</label>
+          <select id="tierFilter">
+            <option value="">Select Tier...</option>
+            <option value="1">Tier 1</option>
+            <option value="2">Tier 2</option>
+            <option value="3">Tier 3</option>
+            <option value="4">Tier 4</option>
+            <option value="5">Tier 5</option>
+            <option value="6">Tier 6</option>
+          </select>
         </div>
 
         <div class="filter-group">
-            <label>Level (B2B)</label>
-            <select id="levelFilter">
-                <option value="1">Level 1</option>
-                <option value="2">Level 2</option>
-                <option value="3">Level 3</option>
-            </select>
+          <label>Level (DPL)</label>
+          <select id="levelFilter">
+            <option value="">Select Level...</option>
+            <option value="1">Level 1</option>
+            <option value="2">Level 2</option>
+            <option value="3">Level 3</option>
+          </select>
         </div>
 
         <!-- Comparison Lab Controls -->
         <div class="filter-group">
-            <label>Add Comparison Lab</label>
-            <select id="compSelect">
-                <option value="">Select Lab...</option>
-                <option value="1MG">1MG</option>
-                <option value="Healthians">Healthians</option>
-            </select>
+          <label>Diagnostics Equivalence Lab (DEL)</label>
+          <select id="compSelect">
+            <option value="">Select Lab...</option>
+            <option value="1MG">1MG</option>
+            <option value="Healthians">Healthians</option>
+            <option value="Redcliffe">Redcliffe</option>
+          </select>
         </div>
-    </div>
+      </div>
 
-    <!-- Active Labs Chips -->
-    <div id="activeB2BLabs" class="active-labs"></div>
-    <div id="activeCompLabs" class="active-labs"></div>
+      <!-- Active Labs Chips -->
+      <div id="activeB2BLabs" class="active-labs"></div>
+      <div id="activeCompLabs" class="active-labs"></div>
 
-    <div class="btn-group">
-        <button class="btn-toggle" onclick="toggleComparison()">Show/Hide Comparison</button>
-        <button class="btn-download" onclick="exportToPDF()">Download PDF Report</button>
-    </div>
+      <div class="btn-group">
+        <button class="btn-toggle" onclick="toggleComparison()">
+          Show/Hide (DEL)
+        </button>
+        <button class="btn-download" onclick="exportToPDF()">
+          Download PDF Report
+        </button>
+      </div>
 
-    <!-- Data Display Area -->
-    <div id="displayArea">
+      <!-- Data Display Area -->
+      <div id="displayArea">
         <div id="b2bSection" class="table-section">
-            <h2>B2B Labs Data</h2>
-            <div id="b2bTables"></div>
+          <h2>Diagnostics Partner Labs (DPL)</h2>
+          <div id="b2bTables"></div>
         </div>
 
         <div id="compSection" class="table-section hidden">
-            <h2>Comparison Labs Data</h2>
-            <div id="compTables"></div>
+          <h2>Diagnostics Equivalence Labs (DEL)</h2>
+          <div id="compTables"></div>
         </div>
+      </div>
+
+      <div
+        class=""
+        style="
+          font-family: monospace;
+          font-size: small;
+          text-transform: uppercase;
+        "
+      >
+        <h3>Instructions</h3>
+        <ol>
+          <li>Diagnostics Investigation Price (DIP)</li>
+          <br />
+          <li>Minimum Selling Price (MSP)</li>
+          <br />
+          <li>Best Selling Price (BSP)</li>
+          <br />
+          <li>Direct Selling Price (DSP)</li>
+          <br />
+          <li>Maximum Retail Price (MRP)</li>
+          <br />
+          <li>Discounted (%OFF)</li>
+        </ol>
+        <p>
+          <code><strong>%OFF = ((1 - (DSP/MRP))*100)</strong></code>
+        </p>
+      </div>
     </div>
-</div>
 
-<script>
-    // Embedded JSON Data
-    const labData = {
-        "CBC001": {
-            "Test Name": "Complete Blood Count (CBC)",
-            "Department": "Pathology",
-            "Category": "I",
-            "Test Link": "https://google.com",
-            "Prognosis / DIP": 60, "Prognosis / MSP": 168, "Prognosis / MRP": 350, "Prognosis / BSP": 312,
-            "Prognosis/DSP/6/3": 219, "Prognosis/DSP/6/2": 227, "Prognosis/DSP/6/1": 234,
-            "Prognosis/DSP/5/3": 241, "Prognosis/DSP/5/2": 249, "Prognosis/DSP/5/1": 256,
-            "Healthians / DIP": 110, "Healthians / MSP": 292, "Healthians / MRP": 600, "Healthians / BSP": 412,
-            "Healthians/DSP/6/3": 379, "Healthians/DSP/6/2": 391, "Healthians/DSP/6/1": 403,
-            "Healthians/DSP/5/3": 416, "Healthians/DSP/5/2": 428, "Healthians/DSP/5/1": 440,
-            "Comparison/1MG/DSP": 319, "Comparison/1MG/MRP": 350,
-            "Comparison/Healthians/DSP": 303, "Comparison/Healthians/MRP": 1010
+    <script>
+      // Embedded JSON Data
+      const labData = {
+        CBC001: {
+          "Test Name": "Complete Blood Count (CBC)",
+          Department: "Pathology",
+          Category: "I",
+          "Test Link": "",
+          "Prognosis/DIP": 60,
+          "Prognosis/MSP": 168,
+          "Prognosis/MRP": 350,
+          "Prognosis/BSP": 312,
+          "Prognosis/DSP/6/3": 219,
+          "Prognosis/DSP/6/2": 227,
+          "Prognosis/DSP/6/1": 234,
+          "Prognosis/DSP/5/3": 241,
+          "Prognosis/DSP/5/2": 249,
+          "Prognosis/DSP/5/1": 256,
+          "Healthians/DIP": 110,
+          "Healthians/MSP": 292,
+          "Healthians/MRP": 600,
+          "Healthians/BSP": 412,
+          "Healthians/DSP/6/3": 379,
+          "Healthians/DSP/6/2": 391,
+          "Healthians/DSP/6/1": 403,
+          "Healthians/DSP/5/3": 416,
+          "Healthians/DSP/5/2": 428,
+          "Healthians/DSP/5/1": 440,
+          "Comparison/1MG/DSP": 319,
+          "Comparison/1MG/MRP": 350,
+          "Comparison/1MG/Test Link": "https://www.1mg.com/labs/test/1717",
+          "Comparison/Healthians/DSP": 303,
+          "Comparison/Healthians/MRP": 1010,
+          "Comparison/Healthians/Test Link":
+            "https://www.healthians.com/profile/delhi/complete-blood-count",
+          "Comparison/Redcliffe/DSP": 299,
+          "Comparison/Redcliffe/MRP": 525,
+          "Comparison/Redcliffe/Test Link":
+            "https://redcliffelabs.com/delhi/tests/cbc-test",
         },
-        "KFT001": {
-            "Test Name": "Kidney Function Test (KFT)",
-            "Department": "Pathology",
-            "Category": "IV",
-            "Test Link": "https://instagram.com",
-            "Prognosis / DIP": 100, "Prognosis / MSP": 359, "Prognosis / MRP": 800, "Prognosis / BSP": 567,
-            "Prognosis/DSP/6/3": 483, "Prognosis/DSP/6/2": 501, "Prognosis/DSP/6/1": 518,
-            "Prognosis/DSP/5/3": 536, "Prognosis/DSP/5/2": 554, "Prognosis/DSP/5/1": 571,
-            "Healthians / DIP": 110, "Healthians / MSP": 403, "Healthians / MRP": 900, "Healthians / BSP": 567,
-            "Healthians/DSP/6/3": 543, "Healthians/DSP/6/2": 563, "Healthians/DSP/6/1": 582,
-            "Healthians/DSP/5/3": 602, "Healthians/DSP/5/2": 622, "Healthians/DSP/5/1": 642,
-            "Comparison/1MG/DSP": 399, "Comparison/1MG/MRP": 850,
-            "Comparison/Healthians/DSP": 427, "Comparison/Healthians/MRP": 1423
+        KFT001: {
+          "Test Name": "Kidney Function Test (KFT)",
+          Department: "Pathology",
+          Category: "IV",
+          "Test Link": "",
+          "Prognosis/DIP": 100,
+          "Prognosis/MSP": 359,
+          "Prognosis/MRP": 800,
+          "Prognosis/BSP": 567,
+          "Prognosis/DSP/6/3": 483,
+          "Prognosis/DSP/6/2": 501,
+          "Prognosis/DSP/6/1": 518,
+          "Prognosis/DSP/5/3": 536,
+          "Prognosis/DSP/5/2": 554,
+          "Prognosis/DSP/5/1": 571,
+          "Healthians/DIP": 110,
+          "Healthians/MSP": 403,
+          "Healthians/MRP": 900,
+          "Healthians/BSP": 567,
+          "Healthians/DSP/6/3": 543,
+          "Healthians/DSP/6/2": 563,
+          "Healthians/DSP/6/1": 582,
+          "Healthians/DSP/5/3": 602,
+          "Healthians/DSP/5/2": 622,
+          "Healthians/DSP/5/1": 642,
+          "Comparison/1MG/DSP": 399,
+          "Comparison/1MG/MRP": 850,
+          "Comparison/1MG/Test Link": "https://www.1mg.com/labs/test/32826",
+          "Comparison/Healthians/DSP": 427,
+          "Comparison/Healthians/MRP": 1423,
+          "Comparison/Healthians/Test Link":
+            "https://www.healthians.com/profile/delhi/kidney-function-test",
+          "Comparison/Redcliffe/DSP": 399,
+          "Comparison/Redcliffe/MRP": 1068,
+          "Comparison/Redcliffe/Test Link":
+            "https://redcliffelabs.com/delhi/tests/kidney-function-test-kft",
         },
-        "LFT001": {
-            "Test Name": "Liver Function Test (LFT)",
-            "Department": "Pathology",
-            "Category": "II",
-            "Test Link": "https://linkedin.com",
-            "Prognosis / DIP": 80, "Prognosis / MSP": 310, "Prognosis / MRP": 700, "Prognosis / BSP": 385,
-            "Prognosis/DSP/6/3": 420, "Prognosis/DSP/6/2": 435, "Prognosis/DSP/6/1": 451,
-            "Prognosis/DSP/5/3": 466, "Prognosis/DSP/5/2": 482, "Prognosis/DSP/5/1": 498,
-            "Healthians / DIP": 110, "Healthians / MSP": 310, "Healthians / MRP": 650, "Healthians / BSP": 485,
-            "Healthians/DSP/6/3": 406, "Healthians/DSP/6/2": 419, "Healthians/DSP/6/1": 433,
-            "Healthians/DSP/5/3": 446, "Healthians/DSP/5/2": 460, "Healthians/DSP/5/1": 474,
-            "Comparison/1MG/DSP": 399, "Comparison/1MG/MRP": 710,
-            "Comparison/Healthians/DSP": 379, "Comparison/Healthians/MRP": 1263
-        }
-    };
+        LFT001: {
+          "Test Name": "Liver Function Test (LFT)",
+          Department: "Pathology",
+          Category: "II",
+          "Test Link": "",
+          "Prognosis/DIP": 80,
+          "Prognosis/MSP": 310,
+          "Prognosis/MRP": 700,
+          "Prognosis/BSP": 385,
+          "Prognosis/DSP/6/3": 420,
+          "Prognosis/DSP/6/2": 435,
+          "Prognosis/DSP/6/1": 451,
+          "Prognosis/DSP/5/3": 466,
+          "Prognosis/DSP/5/2": 482,
+          "Prognosis/DSP/5/1": 498,
+          "Healthians/DIP": 110,
+          "Healthians/MSP": 310,
+          "Healthians/MRP": 650,
+          "Healthians/BSP": 485,
+          "Healthians/DSP/6/3": 406,
+          "Healthians/DSP/6/2": 419,
+          "Healthians/DSP/6/1": 433,
+          "Healthians/DSP/5/3": 446,
+          "Healthians/DSP/5/2": 460,
+          "Healthians/DSP/5/1": 474,
+          "Comparison/1MG/DSP": 399,
+          "Comparison/1MG/MRP": 710,
+          "Comparison/1MG/Test Link": "https://www.1mg.com/labs/test/2562",
+          "Comparison/Healthians/DSP": 379,
+          "Comparison/Healthians/MRP": 1263,
+          "Comparison/Healthians/Test Link":
+            "https://www.healthians.com/profile/delhi/liver-function-test",
+          "Comparison/Redcliffe/DSP": 399,
+          "Comparison/Redcliffe/MRP": 958,
+          "Comparison/Redcliffe/Test Link":
+            "https://redcliffelabs.com/delhi/tests/liver-function-test-lft",
+        },
+      };
 
-    // State
-    let selectedTestIds = [];
-    let selectedB2BLabs = [];
-    let selectedCompLabs = [];
+      // State
+      let selectedTestIds = [];
+      let selectedB2BLabs = [];
+      let selectedCompLabs = [];
 
-    const searchInput = document.getElementById('testSearch');
-    const dropdown = document.getElementById('dropdown');
-    const tagsContainer = document.getElementById('selectedTags');
-    const tierSel = document.getElementById('tierFilter');
-    const levelSel = document.getElementById('levelFilter');
+      const searchInput = document.getElementById("testSearch");
+      const dropdown = document.getElementById("dropdown");
+      const tagsContainer = document.getElementById("selectedTags");
+      const tierSel = document.getElementById("tierFilter");
+      const levelSel = document.getElementById("levelFilter");
 
-    // UI Initialization
-    function init() {
+      // UI Initialization
+      function init() {
         renderActiveChips();
         renderTables();
-    }
+      }
 
-    // Search Logic
-    searchInput.addEventListener('input', (e) => {
+      // Search Logic
+      searchInput.addEventListener("input", (e) => {
         const query = e.target.value.toLowerCase();
-        dropdown.innerHTML = '';
-        if (query.length < 1) { dropdown.style.display = 'none'; return; }
+        dropdown.innerHTML = "";
+        if (query.length < 1) {
+          dropdown.style.display = "none";
+          return;
+        }
 
-        const matches = Object.entries(labData).filter(([id, data]) => 
-            data["Test Name"].toLowerCase().includes(query) || id.toLowerCase().includes(query)
+        const matches = Object.entries(labData).filter(
+          ([id, data]) =>
+            data["Test Name"].toLowerCase().includes(query) ||
+            id.toLowerCase().includes(query),
         );
 
         if (matches.length > 0) {
-            matches.forEach(([id, data]) => {
-                const div = document.createElement('div');
-                div.className = 'dropdown-item';
-                div.textContent = `${data["Test Name"]} (${id})`;
-                div.onclick = () => selectTest(id);
-                dropdown.appendChild(div);
-            });
-            dropdown.style.display = 'block';
+          matches.forEach(([id, data]) => {
+            const div = document.createElement("div");
+            div.className = "dropdown-item";
+            div.textContent = `${data["Test Name"]} (${id})`;
+            div.onclick = () => selectTest(id);
+            dropdown.appendChild(div);
+          });
+          dropdown.style.display = "block";
         } else {
-            dropdown.style.display = 'none';
+          dropdown.style.display = "none";
         }
-    });
+      });
 
-    function selectTest(id) {
+      function selectTest(id) {
         if (!selectedTestIds.includes(id)) {
-            selectedTestIds.push(id);
-            renderTags();
-            renderTables();
+          selectedTestIds.push(id);
+          renderTags();
+          renderTables();
         }
-        searchInput.value = '';
-        dropdown.style.display = 'none';
-    }
+        searchInput.value = "";
+        dropdown.style.display = "none";
+      }
 
-    function removeTest(id) {
-        selectedTestIds = selectedTestIds.filter(tid => tid !== id);
+      function removeTest(id) {
+        selectedTestIds = selectedTestIds.filter((tid) => tid !== id);
         renderTags();
         renderTables();
-    }
+      }
 
-    function renderTags() {
-        tagsContainer.innerHTML = '';
-        selectedTestIds.forEach(id => {
-            const tag = document.createElement('div');
-            tag.className = 'tag';
-            tag.innerHTML = `
+      function renderTags() {
+        tagsContainer.innerHTML = "";
+        selectedTestIds.forEach((id) => {
+          const tag = document.createElement("div");
+          tag.className = "tag";
+          tag.innerHTML = `
                 ${labData[id]["Test Name"]} 
-                <a href="${labData[id]["Test Link"]}" target="_blank">ⓘ</a>
+                <a href="${labData[id]["Test Link"]}" target="_blank"></a>
                 <span class="remove" onclick="removeTest('${id}')">×</span>
             `;
-            tagsContainer.appendChild(tag);
+          tagsContainer.appendChild(tag);
         });
-    }
+      }
 
-    // Lab Management
-    document.getElementById('b2bSelect').onchange = (e) => {
+      // Lab Management
+      document.getElementById("b2bSelect").onchange = (e) => {
         const val = e.target.value;
         if (val && !selectedB2BLabs.includes(val)) {
-            selectedB2BLabs.push(val);
-            renderActiveChips();
-            renderTables();
+          selectedB2BLabs.push(val);
+          renderActiveChips();
+          renderTables();
         }
-        e.target.value = '';
-    };
+        e.target.value = "";
+      };
 
-    document.getElementById('compSelect').onchange = (e) => {
+      document.getElementById("compSelect").onchange = (e) => {
         const val = e.target.value;
         if (val && !selectedCompLabs.includes(val)) {
-            selectedCompLabs.push(val);
-            renderActiveChips();
-            renderTables();
+          selectedCompLabs.push(val);
+          renderActiveChips();
+          renderTables();
         }
-        e.target.value = '';
-    };
+        e.target.value = "";
+      };
 
-    function removeLab(type, name) {
-        if (type === 'b2b') selectedB2BLabs = selectedB2BLabs.filter(l => l !== name);
-        else selectedCompLabs = selectedCompLabs.filter(l => l !== name);
+      function removeLab(type, name) {
+        if (type === "b2b")
+          selectedB2BLabs = selectedB2BLabs.filter((l) => l !== name);
+        else selectedCompLabs = selectedCompLabs.filter((l) => l !== name);
         renderActiveChips();
         renderTables();
-    }
+      }
 
-    function renderActiveChips() {
-        const b2bContainer = document.getElementById('activeB2BLabs');
-        const compContainer = document.getElementById('activeCompLabs');
-        
-        b2bContainer.innerHTML = '<label style="width:100%">Active B2B Labs:</label>';
-        selectedB2BLabs.forEach(lab => {
-            b2bContainer.innerHTML += `
+      function renderActiveChips() {
+        const b2bContainer = document.getElementById("activeB2BLabs");
+        const compContainer = document.getElementById("activeCompLabs");
+
+        b2bContainer.innerHTML =
+          '<label style="width:100%">Active Diagnostics Partner Labs (DPL):</label>';
+        selectedB2BLabs.forEach((lab) => {
+          b2bContainer.innerHTML += `
                 <div class="lab-chip">${lab} <span onclick="removeLab('b2b', '${lab}')">×</span></div>
             `;
         });
 
-        compContainer.innerHTML = '<label style="width:100%">Active Comparison Labs:</label>';
-        selectedCompLabs.forEach(lab => {
-            compContainer.innerHTML += `
+        compContainer.innerHTML =
+          '<label style="width:100%">Active Diagnostics Equivalence Labs (DEL):</label>';
+        selectedCompLabs.forEach((lab) => {
+          compContainer.innerHTML += `
                 <div class="lab-chip" style="background:#6c757d">${lab} <span onclick="removeLab('comp', '${lab}')">×</span></div>
             `;
         });
-    }
+      }
 
-    // Table Rendering
-    function renderTables() {
-        const b2bTables = document.getElementById('b2bTables');
-        const compTables = document.getElementById('compTables');
-        b2bTables.innerHTML = '';
-        compTables.innerHTML = '';
+      // Table Rendering
+      function renderTables() {
+        const b2bTables = document.getElementById("b2bTables");
+        const compTables = document.getElementById("compTables");
+        b2bTables.innerHTML = "";
+        compTables.innerHTML = "";
 
         if (selectedTestIds.length === 0) {
-            b2bTables.innerHTML = '<p style="font-size:0.8rem; color:#999">Search and select tests to see data...</p>';
-            return;
+          b2bTables.innerHTML =
+            '<p style="font-size:0.8rem; color:#999">Search and select tests to see data...</p>';
+          return;
         }
 
         const tier = tierSel.value;
         const level = levelSel.value;
 
         // B2B Section
-        selectedB2BLabs.forEach(lab => {
-            let html = `<h3>${lab} (Tier ${tier}, Lvl ${level})</h3><table>
-                <thead><tr><th>Test</th><th>DIP</th><th>MSP</th><th>BSP</th><th>MRP</th><th>DSP (T/L)</th></tr></thead><tbody>`;
-            
-            let tDIP = 0, tMSP = 0, tBSP = 0, tMRP = 0, tDSP = 0;
+        selectedB2BLabs.forEach((lab) => {
+          let html = `<h3>${lab} (Tier ${tier}, Level ${level})</h3>
+          <table>
+                <thead>
+                    <tr>
+                        <th>Test</th>
+                        <th>DIP</th>
+                        <th>MSP</th>
+                        <th>BSP</th>
+                        <th>DSP (T/L)</th>
+                        <th>MRP</th>
+                        <th>Margin %</th>
+                    </tr>
+                </thead>
+            <tbody>`;
 
-            selectedTestIds.forEach(id => {
-                const item = labData[id];
-                const dspKey = `${lab}/DSP/${tier}/${level}`;
-                const dip = item[`${lab} / DIP`] || 0;
-                const msp = item[`${lab} / MSP`] || 0;
-                const bsp = item[`${lab} / BSP`] || 0;
-                const mrp = item[`${lab} / MRP`] || 0;
-                const dsp = item[dspKey] || 0;
+          let tDIP = 0,
+            tMSP = 0,
+            tBSP = 0,
+            tMRP = 0,
+            tDSP = 0;
 
-                tDIP += dip; tMSP += msp; tBSP += bsp; tMRP += mrp; tDSP += dsp;
+          selectedTestIds.forEach((id) => {
+            const item = labData[id];
+            const dspKey = `${lab}/DSP/${tier}/${level}`;
+            const dip = item[`${lab}/DIP`] || 0;
+            const msp = item[`${lab}/MSP`] || 0;
+            const bsp = item[`${lab}/BSP`] || 0;
+            const mrp = item[`${lab}/MRP`] || 0;
+            const dsp = item[dspKey] || 0;
+            const margin = mrp > 0 ? (((mrp - dsp) / mrp) * 100).toFixed(1) : 0;
 
-                html += `<tr>
+            tDIP += dip;
+            tMSP += msp;
+            tBSP += bsp;
+            tMRP += mrp;
+            tDSP += dsp;
+
+            html += `<tr>
                     <td>${item["Test Name"]}</td>
                     <td>₹${dip}</td>
                     <td>₹${msp}</td>
                     <td>₹${bsp}</td>
-                    <td>₹${mrp}</td>
                     <td>₹${dsp}</td>
+                    <td>₹${mrp}</td>
+                    <td><span class="percent-badge">${margin}%</span></td>
                 </tr>`;
-            });
+          });
 
-            html += `<tr class="total-row">
+          //   html += `<tr class="total-row">
+          //         <td>TOTAL</td>
+          //         <td>₹${tDIP}</td>
+          //         <td>₹${tMSP}</td>
+          //         <td>₹${tBSP}</td>
+          //         <td>₹${tDSP}</td>
+          //         <td>₹${tMRP}</td>
+          //     </tr>`;
+          // });
+          const totalMargin =
+            tMRP > 0 ? (((tMRP - tDSP) / tMRP) * 100).toFixed(1) : 0;
+          html += `<tr class="total-row">
                 <td>TOTAL</td>
                 <td>₹${tDIP}</td>
                 <td>₹${tMSP}</td>
                 <td>₹${tBSP}</td>
-                <td>₹${tMRP}</td>
                 <td>₹${tDSP}</td>
-            </tr></tbody></table>`;
-            b2bTables.innerHTML += html;
+                <td>₹${tMRP}</td>
+                <td><span class="percent-badge">${totalMargin}%</span></td>
+            </tr>
+            </tbody>
+        </table>`;
+          b2bTables.innerHTML += html;
         });
 
         // Comparison Section
-        selectedCompLabs.forEach(lab => {
-            let html = `<h3>${lab} Comparison</h3><table>
-                <thead><tr><th>Test</th><th>MRP</th><th>DSP</th><th>Margin %</th></tr></thead><tbody>`;
-            
-            let tMRP = 0, tDSP = 0;
+        selectedCompLabs.forEach((lab) => {
+          let html = `<h3>${lab} Comparison</h3>
+          <table>
+                <thead>
+                    <tr>
+                        <th>Test</th>
+                        <th>DSP</th>
+                        <th>MRP</th>
+                        <th>Margin %</th>
+                    </tr>
+                </thead>
+            <tbody>`;
 
-            selectedTestIds.forEach(id => {
-                const item = labData[id];
-                const mrp = item[`Comparison/${lab}/MRP`] || 0;
-                const dsp = item[`Comparison/${lab}/DSP`] || 0;
-                const margin = mrp > 0 ? (((mrp - dsp) / mrp) * 100).toFixed(1) : 0;
+          let tMRP = 0,
+            tDSP = 0;
 
-                tMRP += mrp; tDSP += dsp;
+          selectedTestIds.forEach((id) => {
+            const item = labData[id];
+            const mrp = item[`Comparison/${lab}/MRP`] || 0;
+            const dsp = item[`Comparison/${lab}/DSP`] || 0;
+            const test_link = item[`Comparison/${lab}/Test Link`];
+            const margin = mrp > 0 ? (((mrp - dsp) / mrp) * 100).toFixed(1) : 0;
 
-                html += `<tr>
-                    <td>${item["Test Name"]}</td>
-                    <td>₹${mrp}</td>
+            tDSP += dsp;
+            tMRP += mrp;
+
+            html += `<tr>
+                    <td><a href="${test_link}" target="_blank" style="">${item["Test Name"]}</a></td>
                     <td>₹${dsp}</td>
+                    <td>₹${mrp}</td>
                     <td><span class="percent-badge">${margin}%</span></td>
                 </tr>`;
-            });
+          });
 
-            const totalMargin = tMRP > 0 ? (((tMRP - tDSP) / tMRP) * 100).toFixed(1) : 0;
-            html += `<tr class="total-row">
+          const totalMargin =
+            tMRP > 0 ? (((tMRP - tDSP) / tMRP) * 100).toFixed(1) : 0;
+          html += `<tr class="total-row">
                 <td>TOTAL</td>
-                <td>₹${tMRP}</td>
                 <td>₹${tDSP}</td>
+                <td>₹${tMRP}</td>
                 <td><span class="percent-badge">${totalMargin}%</span></td>
-            </tr></tbody></table>`;
-            compTables.innerHTML += html;
+            </tr>
+            </tbody>
+        </table>`;
+          compTables.innerHTML += html;
         });
-    }
+      }
 
-    function toggleComparison() {
-        document.getElementById('compSection').classList.toggle('hidden');
-    }
+      function toggleComparison() {
+        document.getElementById("compSection").classList.toggle("hidden");
+      }
 
-    tierSel.onchange = renderTables;
-    levelSel.onchange = renderTables;
+      tierSel.onchange = renderTables;
+      levelSel.onchange = renderTables;
 
-    // PDF Export
-    async function exportToPDF() {
+      // PDF Export
+      async function exportToPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
+
         doc.setFontSize(16);
         doc.text("Lab Price Comparison Report", 14, 20);
         doc.setFontSize(10);
         doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 28);
-        doc.text(`B2B Setting: Tier ${tierSel.value}, Level ${levelSel.value}`, 14, 34);
+        doc.text(
+          `B2B Setting: Tier ${tierSel.value}, Level ${levelSel.value}`,
+          14,
+          34,
+        );
 
         let finalY = 40;
 
         // B2B Tables in PDF
-        selectedB2BLabs.forEach(lab => {
-            doc.setFontSize(12);
-            doc.text(`Lab: ${lab}`, 14, finalY + 10);
-            
-            const rows = selectedTestIds.map(id => {
-                const item = labData[id];
-                return [
-                    item["Test Name"],
-                    item[`${lab} / DIP`],
-                    item[`${lab} / MSP`],
-                    item[`${lab} / BSP`],
-                    item[`${lab} / MRP`],
-                    item[`${lab}/DSP/${tierSel.value}/${levelSel.value}`]
-                ];
-            });
+        selectedB2BLabs.forEach((lab) => {
+          doc.setFontSize(12);
+          doc.text(`Lab: ${lab}`, 14, finalY + 10);
 
-            doc.autoTable({
-                startY: finalY + 15,
-                head: [['Test', 'DIP', 'MSP', 'BSP', 'MRP', 'DSP']],
-                body: rows,
-                theme: 'grid',
-                headStyles: { fillColor: [44, 62, 80] }
-            });
-            finalY = doc.lastAutoTable.finalY + 10;
+          const rows = selectedTestIds.map((id) => {
+            const item = labData[id];
+            return [
+              item["Test Name"],
+              item[`${lab}/DIP`],
+              item[`${lab}/MSP`],
+              item[`${lab}/BSP`],
+              item[`${lab}/DSP/${tierSel.value}/${levelSel.value}`],
+              item[`${lab}/MRP`],
+            ];
+          });
+
+          doc.autoTable({
+            startY: finalY + 15,
+            head: [["Test", "DIP", "MSP", "BSP", "DSP", "MRP"]],
+            body: rows,
+            theme: "grid",
+            headStyles: { fillColor: [44, 62, 80] },
+          });
+          finalY = doc.lastAutoTable.finalY + 10;
         });
 
         // Comparison Labs
-        if (!document.getElementById('compSection').classList.contains('hidden')) {
-            selectedCompLabs.forEach(lab => {
-                doc.setFontSize(12);
-                doc.text(`Comparison: ${lab}`, 14, finalY + 10);
-                
-                const rows = selectedTestIds.map(id => {
-                    const item = labData[id];
-                    const mrp = item[`Comparison/${lab}/MRP`] || 0;
-                    const dsp = item[`Comparison/${lab}/DSP`] || 0;
-                    const margin = mrp > 0 ? (((mrp - dsp) / mrp) * 100).toFixed(1) + '%' : '0%';
-                    return [item["Test Name"], mrp, dsp, margin];
-                });
+        if (
+          !document.getElementById("compSection").classList.contains("hidden")
+        ) {
+          selectedCompLabs.forEach((lab) => {
+            doc.setFontSize(12);
+            doc.text(`Comparison: ${lab}`, 14, finalY + 10);
 
-                doc.autoTable({
-                    startY: finalY + 15,
-                    head: [['Test', 'MRP', 'DSP', 'Margin %']],
-                    body: rows,
-                    theme: 'striped',
-                    headStyles: { fillColor: [108, 117, 125] }
-                });
-                finalY = doc.lastAutoTable.finalY + 10;
+            const rows = selectedTestIds.map((id) => {
+              const item = labData[id];
+              const mrp = item[`Comparison/${lab}/MRP`] || 0;
+              const dsp = item[`Comparison/${lab}/DSP`] || 0;
+              const margin =
+                mrp > 0 ? (((mrp - dsp) / mrp) * 100).toFixed(1) + "%" : "0%";
+              return [item["Test Name"], mrp, dsp, margin];
             });
+
+            doc.autoTable({
+              startY: finalY + 15,
+              head: [["Test", "DSP", "MRP", "Margin %"]],
+              body: rows,
+              theme: "striped",
+              headStyles: { fillColor: [108, 117, 125] },
+            });
+            finalY = doc.lastAutoTable.finalY + 10;
+          });
         }
+        const now = new Date();
+        doc.save(`Zorpid_Pricing_Report_${now.toISOString()}.pdf`);
+      }
 
-        doc.save("Lab_Report.pdf");
-    }
-
-    init();
-</script>
-
-</body>
+      init();
+    </script>
+  </body>
 </html>
