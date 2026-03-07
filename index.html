@@ -112,7 +112,7 @@
   }
   .section-toggle-icon.collapsed { transform: rotate(-90deg); }
   .section-body {
-    overflow: hidden;
+    overflow: visible;
     transition: max-height 0.22s ease, opacity 0.18s ease;
     max-height: 800px;
     opacity: 1;
@@ -121,6 +121,7 @@
     max-height: 0;
     opacity: 0;
     pointer-events: none;
+    overflow: hidden;
   }
   .section-body-inner { padding-top: 8px; }
 
