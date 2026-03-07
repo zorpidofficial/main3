@@ -9,27 +9,27 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root {
-    --bg: #f5f4f0;
+    --bg: #f9f9f8;
     --surface: #ffffff;
-    --border: #d8d5ce;
-    --border-light: #e8e5de;
-    --text: #1a1916;
-    --text-muted: #6b6860;
-    --text-faint: #9e9b94;
-    --accent: #1a3a5c;
-    --accent-light: #e8eef4;
+    --border: #e2e0db;
+    --border-light: #eeece8;
+    --text: #111110;
+    --text-muted: #78756e;
+    --text-faint: #b0ada6;
+    --accent: #1c3f64;
+    --accent-light: #edf2f7;
     --green: #1a5c2e;
-    --green-bg: #e8f4ec;
-    --red: #5c1a1a;
-    --red-bg: #f4e8e8;
+    --green-bg: #f0f7f2;
+    --red: #7a2020;
+    --red-bg: #fdf2f2;
     --amber: #5c3d1a;
-    --amber-bg: #f4ede8;
-    --tag-bg: #1a3a5c;
+    --amber-bg: #faf4ed;
+    --tag-bg: #1c3f64;
     --tag-text: #ffffff;
     --mono: 'IBM Plex Mono', monospace;
     --sans: 'IBM Plex Sans', sans-serif;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08);
-    --shadow-md: 0 2px 8px rgba(0,0,0,0.10);
+    --shadow: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 2px 6px rgba(0,0,0,0.07);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,56 +39,102 @@
     background: var(--bg);
     color: var(--text);
     font-size: 12px;
+    font-weight: 400;
     line-height: 1.5;
     min-height: 100vh;
   }
 
   /* HEADER */
   header {
-    background: var(--accent);
-    color: #fff;
-    padding: 12px 20px;
+    background: var(--surface);
+    color: var(--text);
+    padding: 11px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
   }
-  header h1 { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; }
-  header span { font-size: 10px; opacity: 0.6; font-family: var(--mono); }
+  header h1 { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+  header span { font-size: 10px; color: var(--text-faint); font-family: var(--mono); font-weight: 500; }
 
   /* LAYOUT */
-  .layout { display: flex; min-height: calc(100vh - 44px); }
+  .layout { display: flex; min-height: calc(100vh - 43px); }
 
   /* SIDEBAR */
   .sidebar {
-    width: 260px;
+    width: 258px;
     flex-shrink: 0;
     background: var(--surface);
     border-right: 1px solid var(--border);
-    padding: 16px;
+    padding: 14px 14px 20px;
     overflow-y: auto;
     position: sticky;
-    top: 44px;
-    height: calc(100vh - 44px);
+    top: 43px;
+    height: calc(100vh - 43px);
   }
 
   /* MAIN */
   .main { flex: 1; padding: 16px; overflow-x: auto; min-width: 0; }
 
-  /* SECTION LABELS */
+  /* COLLAPSIBLE SECTION HEADERS */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    margin-top: 14px;
+    margin-bottom: 0;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+  }
+  .section-header:first-child { margin-top: 0; }
+  .section-header-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .section-toggle-icon {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-faint);
+    transition: transform 0.18s ease;
+    flex-shrink: 0;
+  }
+  .section-toggle-icon.collapsed { transform: rotate(-90deg); }
+  .section-body {
+    overflow: hidden;
+    transition: max-height 0.22s ease, opacity 0.18s ease;
+    max-height: 800px;
+    opacity: 1;
+  }
+  .section-body.collapsed {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .section-body-inner { padding-top: 8px; }
+
+  /* keep old section-label for non-collapsible items */
   .section-label {
     font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
+    font-weight: 700;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--text-faint);
+    color: var(--text-muted);
     margin-bottom: 8px;
-    margin-top: 16px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--border-light);
+    margin-top: 14px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
   }
   .section-label:first-child { margin-top: 0; }
 
@@ -100,6 +146,7 @@
     color: var(--text);
     padding: 6px 8px;
     font-size: 11px;
+    font-weight: 500;
     font-family: var(--sans);
     border-radius: 3px;
     outline: none;
@@ -114,10 +161,10 @@
   /* SEARCH BOX */
   .search-wrap { position: relative; margin-bottom: 6px; }
   .search-wrap input { padding-left: 26px; }
-  .search-wrap svg { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); opacity: 0.4; }
+  .search-wrap svg { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); opacity: 0.35; }
 
   /* DEPT TAGS */
-  .dept-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .dept-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 8px; }
   .dept-tag {
     font-size: 9px;
     padding: 2px 7px;
@@ -126,11 +173,12 @@
     cursor: pointer;
     background: var(--bg);
     color: var(--text-muted);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
+    font-weight: 600;
     transition: all 0.12s;
-    font-weight: 500;
   }
   .dept-tag.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .dept-tag:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
 
   /* SEARCH RESULTS DROPDOWN */
   .search-results {
@@ -152,12 +200,13 @@
     padding: 6px 10px;
     cursor: pointer;
     font-size: 11px;
+    font-weight: 500;
     border-bottom: 1px solid var(--border-light);
     transition: background 0.1s;
   }
   .search-item:hover { background: var(--accent-light); }
-  .search-item .sid { font-family: var(--mono); font-size: 9px; color: var(--text-faint); }
-  .search-item .sdept { font-size: 9px; color: var(--text-muted); }
+  .search-item .sid { font-family: var(--mono); font-size: 9px; font-weight: 500; color: var(--text-faint); }
+  .search-item .sdept { font-size: 9px; font-weight: 600; color: var(--text-muted); }
 
   /* SELECTED TAGS */
   .selected-tags { display: flex; flex-direction: column; gap: 4px; }
@@ -165,19 +214,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--accent);
-    color: #fff;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid #c8d8e8;
     border-radius: 3px;
     padding: 5px 8px;
     font-size: 10px;
+    font-weight: 600;
     gap: 6px;
   }
   .sel-tag-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .sel-tag-link { opacity: 0.7; font-size: 9px; text-decoration: underline; color: #fff; cursor: pointer; white-space: nowrap; }
+  .sel-tag-link { opacity: 0.6; font-size: 9px; text-decoration: none; color: var(--accent); cursor: pointer; white-space: nowrap; font-weight: 700; }
   .sel-tag-link:hover { opacity: 1; }
   .sel-tag-remove {
-    cursor: pointer; opacity: 0.6; font-size: 13px; line-height: 1;
-    flex-shrink: 0; transition: opacity 0.1s;
+    cursor: pointer; opacity: 0.45; font-size: 13px; line-height: 1;
+    flex-shrink: 0; transition: opacity 0.1s; color: var(--accent);
   }
   .sel-tag-remove:hover { opacity: 1; }
 
@@ -187,21 +238,22 @@
   .tier-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     background: var(--accent-light);
     color: var(--accent);
+    border: 1px solid #c8d8e8;
     border-radius: 3px;
-    padding: 4px 8px;
+    padding: 5px 8px;
     font-size: 10px;
     font-family: var(--mono);
-    font-weight: 500;
+    font-weight: 700;
     margin-top: 4px;
     width: 100%;
   }
 
   /* FILTER ROWS */
   .filter-row { margin-bottom: 8px; }
-  .filter-row label { display: block; font-size: 9px; color: var(--text-muted); margin-bottom: 3px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .filter-row label { display: block; font-size: 9px; font-weight: 700; color: var(--text-muted); margin-bottom: 3px; letter-spacing: 0.07em; text-transform: uppercase; }
 
   /* MULTI SELECT DROPDOWN */
   .multi-select { position: relative; }
@@ -211,6 +263,7 @@
     background: var(--bg);
     padding: 5px 8px;
     font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -218,6 +271,8 @@
     border-radius: 3px;
     transition: border-color 0.15s;
     user-select: none;
+    font-family: var(--sans);
+    color: var(--text);
   }
   .multi-select-trigger:hover { border-color: var(--accent); }
   .multi-select-trigger.open { border-color: var(--accent); background: var(--surface); }
@@ -238,6 +293,7 @@
     padding: 6px 10px;
     cursor: pointer;
     font-size: 11px;
+    font-weight: 500;
     display: flex;
     align-items: center;
     gap: 7px;
@@ -254,70 +310,71 @@
     padding: 6px 12px;
     font-size: 10px;
     font-family: var(--sans);
-    font-weight: 500;
+    font-weight: 700;
     border: none;
     border-radius: 3px;
     cursor: pointer;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     transition: all 0.12s;
     white-space: nowrap;
   }
   .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: #15304d; }
+  .btn-primary:hover { background: #152f4e; }
   .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
   .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid #d4b0b0; }
-  .btn-danger:hover { background: #e8d0d0; }
+  .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid #e0c0c0; }
+  .btn-danger:hover { background: #f8e8e8; }
 
-  .action-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .action-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
 
   /* EMPTY STATE */
   .empty-state {
     text-align: center;
-    padding: 48px 24px;
+    padding: 60px 24px;
     color: var(--text-faint);
   }
-  .empty-state p { font-size: 11px; margin-top: 8px; }
+  .empty-state p { font-size: 11px; font-weight: 500; margin-top: 10px; color: var(--text-faint); }
 
   /* DATA SECTIONS */
-  .data-sections { display: flex; flex-direction: column; gap: 16px; }
+  .data-sections { display: flex; flex-direction: column; gap: 14px; }
 
   /* LAB BLOCK */
   .lab-block {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
   }
   .lab-block-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
+    padding: 7px 12px;
     background: var(--accent);
     color: #fff;
   }
-  .lab-block-header h3 { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; }
-  .lab-block-header .lab-meta { font-size: 9px; opacity: 0.7; font-family: var(--mono); }
+  .lab-block-header h3 { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .lab-block-header .lab-meta { font-size: 9px; opacity: 0.6; font-family: var(--mono); font-weight: 500; }
 
-  .comp-block-header { background: #2d4a2d; }
-  .noble-header { background: #3a2d1a; }
+  .comp-block-header { background: #254825; }
+  .noble-header { background: #3e2e14; }
 
   /* TABLE */
   .tbl-wrap { overflow-x: auto; }
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 10.5px;
+    font-size: 11px;
     min-width: 500px;
   }
-  thead tr { background: #f0eee8; }
+  thead tr { background: var(--bg); }
   th {
     padding: 6px 10px;
     text-align: left;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 9px;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-muted);
     border-bottom: 1px solid var(--border);
@@ -328,23 +385,24 @@
     border-bottom: 1px solid var(--border-light);
     color: var(--text);
     vertical-align: middle;
+    font-weight: 400;
   }
   tr:last-child td { border-bottom: none; }
-  tbody tr:hover { background: #fafaf8; }
+  tbody tr:hover { background: #fafaf9; }
 
-  .num { font-family: var(--mono); font-size: 10px; }
-  .pct { font-family: var(--mono); font-size: 9px; }
+  .num { font-family: var(--mono); font-size: 10.5px; font-weight: 500; }
+  .pct { font-family: var(--mono); font-size: 9.5px; font-weight: 600; }
   .pct-green { color: var(--green); }
-  .pct-red { color: #a33; }
+  .pct-red { color: #b03030; }
 
   /* TOTAL ROW */
   .total-row td {
-    background: #f0eee8;
-    font-weight: 600;
-    border-top: 2px solid var(--border);
+    background: var(--bg);
+    font-weight: 700;
+    border-top: 1.5px solid var(--border);
     border-bottom: none;
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 10.5px;
   }
 
   /* SECTION DIVIDER */
@@ -352,18 +410,18 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 4px 0;
+    margin: 6px 0;
     font-size: 9px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-faint);
-    font-weight: 600;
+    font-weight: 700;
   }
   .section-divider::before, .section-divider::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--border-light);
+    background: var(--border);
   }
 
   /* COMPARISON BLOCK TOGGLE */
@@ -374,13 +432,13 @@
     padding: 8px 0;
     margin-bottom: 8px;
   }
-  .comp-toggle-bar h2 { font-size: 11px; font-weight: 600; color: var(--text); }
+  .comp-toggle-bar h2 { font-size: 11px; font-weight: 700; color: var(--text); }
 
   /* HIGHLIGHT CELLS */
-  .cell-dip { color: var(--text-muted); }
-  .cell-dsp { color: var(--accent); font-weight: 500; }
-  .cell-msp { color: var(--text); }
-  .cell-mrp { color: var(--text-muted); text-decoration: line-through; }
+  .cell-dip { color: var(--text-muted); font-weight: 500; }
+  .cell-dsp { color: var(--accent); font-weight: 700; }
+  .cell-msp { color: var(--text); font-weight: 500; }
+  .cell-mrp { color: var(--text-faint); text-decoration: line-through; font-weight: 400; }
 
   /* FILTER LEVEL/TIER */
   .filter-inline { display: flex; gap: 6px; }
@@ -393,7 +451,7 @@
     padding: 1px 5px;
     border-radius: 2px;
     font-size: 8px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.05em;
     font-family: var(--mono);
   }
@@ -403,13 +461,13 @@
 
   /* PDF BTN */
   .btn-pdf { background: #1a5c2e; color: #fff; }
-  .btn-pdf:hover { background: #154d26; }
+  .btn-pdf:hover { background: #155025; }
 
   /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #bbb; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #ccc; }
 
   /* RESPONSIVE */
   @media (max-width: 768px) {
@@ -426,9 +484,10 @@
   /* TIER NOTE */
   .tier-note {
     font-size: 9px;
+    font-weight: 500;
     color: var(--text-faint);
-    margin-top: 4px;
-    line-height: 1.4;
+    margin-top: 5px;
+    line-height: 1.5;
   }
 </style>
 </head>
@@ -444,33 +503,60 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
 
-    <!-- LOCATION -->
-    <div class="section-label">Location</div>
-    <div class="loc-row">
-      <input type="number" id="pincodeInput" placeholder="Enter Pincode" style="flex:1.2">
+    <!-- LOCATION (collapsible) -->
+    <div class="section-header" onclick="toggleSection('locationBody', this)">
+      <span class="section-header-label">Location</span>
+      <span class="section-toggle-icon">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
     </div>
-    <select id="localitySelect" style="margin-bottom:4px;">
-      <option value="">— Select Locality —</option>
-    </select>
-    <div id="tierDisplay" class="tier-badge hidden">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      <span id="tierText">—</span>
+    <div class="section-body" id="locationBody">
+      <div class="section-body-inner">
+        <div class="loc-row">
+          <input type="number" id="pincodeInput" placeholder="Enter Pincode" style="flex:1.2">
+        </div>
+        <select id="localitySelect" style="margin-bottom:4px;">
+          <option value="">— Select Locality —</option>
+        </select>
+        <div id="tierDisplay" class="tier-badge hidden">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span id="tierText">—</span>
+        </div>
+        <div class="tier-note">Tier auto-fetched from pincode. B2B prices adjust by tier.</div>
+      </div>
     </div>
-    <div class="tier-note">Tier auto-fetched from pincode. B2B prices adjust by tier.</div>
 
-    <!-- SEARCH -->
-    <div class="section-label">Search Tests</div>
-    <div class="dept-tags" id="deptTags"></div>
-    <div class="search-wrap" id="searchWrap">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" placeholder="Search test name..." autocomplete="off">
-      <div class="search-results" id="searchResults"></div>
+    <!-- SEARCH (collapsible) -->
+    <div class="section-header" onclick="toggleSection('searchBody', this)">
+      <span class="section-header-label">Search Tests</span>
+      <span class="section-toggle-icon">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
+    </div>
+    <div class="section-body" id="searchBody">
+      <div class="section-body-inner">
+        <div class="dept-tags" id="deptTags"></div>
+        <div class="search-wrap" id="searchWrap">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" placeholder="Search test name..." autocomplete="off">
+          <div class="search-results" id="searchResults"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- SELECTED TESTS -->
-    <div class="section-label">Selected Tests</div>
-    <div class="selected-tags" id="selectedTags">
-      <div style="font-size:10px;color:var(--text-faint);">No tests selected.</div>
+    <!-- SELECTED TESTS (collapsible) -->
+    <div class="section-header" onclick="toggleSection('selectedBody', this)">
+      <span class="section-header-label">Selected Tests</span>
+      <span class="section-toggle-icon">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
+    </div>
+    <div class="section-body" id="selectedBody">
+      <div class="section-body-inner">
+        <div class="selected-tags" id="selectedTags">
+          <div style="font-size:10px;font-weight:500;color:var(--text-faint);">No tests selected.</div>
+        </div>
+      </div>
     </div>
 
     <!-- B2B LAB FILTER -->
@@ -682,7 +768,7 @@ function renderSelectedTags() {
   const container = document.getElementById('selectedTags');
   document.getElementById('testCount').textContent = `${selectedTests.length} test${selectedTests.length !== 1 ? 's' : ''} selected`;
   if (selectedTests.length === 0) {
-    container.innerHTML = '<div style="font-size:10px;color:var(--text-faint);">No tests selected.</div>';
+    container.innerHTML = '<div style="font-size:10px;font-weight:500;color:var(--text-faint);">No tests selected.</div>';
     return;
   }
   container.innerHTML = selectedTests.map(t => {
@@ -729,7 +815,7 @@ function updateTier(tierRoman) {
     selectedTier = null;
   } else {
     badge.classList.remove('hidden');
-    tierText.textContent = `Tier ${tierRoman} — DSP at tier ${romanToNum(tierRoman)}`;
+    tierText.textContent = `Tier ${tierRoman} — DSP at tier level ${romanToNum(tierRoman)}`;
     selectedTier = romanToNum(tierRoman);
   }
   renderData();
@@ -902,8 +988,9 @@ function renderB2B() {
       rowsHTML += `<tr>
         <td>${test['Test Name']}</td>
         <td><span class="badge badge-cat">${test.Category || '—'}</span></td>
-        <td class="num cell-msp">${msp !== null ? '₹'+msp.toLocaleString('en-IN') : '<span class="no-data">—</span>'}</td>
+        <td class="num cell-dip">${dip !== null ? '₹'+dip.toLocaleString('en-IN') : '<span class="no-data">—</span>'}</td>
         <td class="num cell-dsp">${dsp !== null ? '₹'+dsp.toLocaleString('en-IN') : '<span class="no-data">—</span>'}</td>
+        <td class="num cell-msp">${msp !== null ? '₹'+msp.toLocaleString('en-IN') : '<span class="no-data">—</span>'}</td>
         <td class="num cell-mrp">${mrp !== null ? '₹'+mrp.toLocaleString('en-IN') : '<span class="no-data">—</span>'}</td>
         <td>${pctHtml}</td>
       </tr>`;
@@ -923,8 +1010,9 @@ function renderB2B() {
             <tr>
               <th>Test Name</th>
               <th>Category</th>
-              <th>MSP</th>
+              <th>DIP</th>
               <th>DSP</th>
+              <th>MSP</th>
               <th>MRP</th>
               <th>Margin %</th>
             </tr>
@@ -935,8 +1023,9 @@ function renderB2B() {
           <tfoot>
             <tr class="total-row">
               <td colspan="2">TOTAL (${selectedTests.length} tests)</td>
-              <td>₹${totalMSP.toLocaleString('en-IN')}</td>
+              <td>₹${totalDIP.toLocaleString('en-IN')}</td>
               <td>₹${totalDSP.toLocaleString('en-IN')}</td>
+              <td>₹${totalMSP.toLocaleString('en-IN')}</td>
               <td>₹${totalMRP.toLocaleString('en-IN')}</td>
               <td>${totalPctHtml}</td>
             </tr>
@@ -1152,6 +1241,14 @@ function downloadPDF() {
   });
 
   doc.save(`lab-price-report-${today.replace(/\//g,'-')}.pdf`);
+}
+
+// ── SECTION TOGGLE ────────────────────────────────────────────────────────────
+function toggleSection(bodyId, headerEl) {
+  const body = document.getElementById(bodyId);
+  const icon = headerEl.querySelector('.section-toggle-icon');
+  const isCollapsed = body.classList.toggle('collapsed');
+  icon.classList.toggle('collapsed', isCollapsed);
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
