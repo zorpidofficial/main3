@@ -322,7 +322,7 @@
   }
   .btn-primary { background: var(--accent); color: #fff; }
   .btn-primary:hover { background: #152f4e; }
-  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-ghost { background: transparent #1a5c2e; border: 1px solid var(--border); color: var(--text-muted); }
   .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
   .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid #e0c0c0; }
   .btn-danger:hover { background: #f8e8e8; }
@@ -495,7 +495,7 @@
 <body>
 
 <header>
-  <h1>Lab Price Comparator</h1>
+  <h1>ZORPID Pricing Dashboard</h1>
   <span id="testCount">0 tests selected</span>
 </header>
 
@@ -561,7 +561,7 @@
     </div>
 
     <!-- B2B LAB FILTER -->
-    <div class="section-label">B2B Lab Filter</div>
+    <div class="section-label">Partner Lab Filter</div>
     <div class="filter-row">
       <label>Partner Lab</label>
       <div class="multi-select" id="b2bLabSelect">
@@ -582,9 +582,9 @@
     </div>
 
     <!-- COMPARISON LAB FILTER -->
-    <div class="section-label">Comparison Lab Filter</div>
+    <div class="section-label">Equivalence Lab Filter</div>
     <div class="filter-row">
-      <label>Comparison Lab</label>
+      <label>Equivalence Lab</label>
       <div class="multi-select" id="compLabSelect">
         <div class="multi-select-trigger" id="compLabTrigger">
           <span class="trigger-text">All Labs</span>
@@ -664,17 +664,18 @@ async function init() {
     ALL_TESTS = INLINE_TESTS;
     ALL_LOCATIONS = INLINE_LOCS;
   }
+  // Init selections to all labs before building dropdowns
+  selectedB2BLabs = [...B2B_LABS];
+  selectedCompLabs = [...COMP_LABS];
+
   buildDeptTags();
   buildMultiSelect('b2bLabDropdown', 'b2bLabTrigger', B2B_LABS, selectedB2BLabs, onB2BLabChange);
   buildMultiSelect('compLabDropdown', 'compLabTrigger', COMP_LABS, selectedCompLabs, onCompLabChange);
+  updateMultiTrigger('b2bLabTrigger', selectedB2BLabs, B2B_LABS);
+  updateMultiTrigger('compLabTrigger', selectedCompLabs, COMP_LABS);
   setupSearch();
   setupLocation();
   setupFilters();
-  // init with all labs
-  selectedB2BLabs = [...B2B_LABS];
-  selectedCompLabs = [...COMP_LABS];
-  updateMultiTrigger('b2bLabTrigger', selectedB2BLabs, B2B_LABS);
-  updateMultiTrigger('compLabTrigger', selectedCompLabs, COMP_LABS);
 }
 
 // ── DEPT TAGS ─────────────────────────────────────────────────────────────────
@@ -816,7 +817,7 @@ function updateTier(tierRoman) {
     selectedTier = null;
   } else {
     badge.classList.remove('hidden');
-    tierText.textContent = `Tier ${tierRoman} — DSP at tier level ${romanToNum(tierRoman)}`;
+    tierText.textContent = `Tier ${tierRoman} — DSP at tier ${romanToNum(tierRoman)}`;
     selectedTier = romanToNum(tierRoman);
   }
   renderData();
@@ -835,9 +836,10 @@ function buildMultiSelect(dropdownId, triggerId, options, selectedArr, onChange)
   const dropdown = document.getElementById(dropdownId);
   const trigger = document.getElementById(triggerId);
 
+  // Populate with all options checked by default
   dropdown.innerHTML = options.map(opt => `
     <label class="multi-option">
-      <input type="checkbox" value="${opt}" ${selectedArr.includes(opt) ? 'checked' : ''} onchange="handleCheck('${dropdownId}','${triggerId}',this)">
+      <input type="checkbox" value="${opt}" checked onchange="handleCheck('${dropdownId}','${triggerId}',this)">
       ${opt}
     </label>`).join('');
 
@@ -847,9 +849,11 @@ function buildMultiSelect(dropdownId, triggerId, options, selectedArr, onChange)
     trigger.classList.toggle('open', isOpen);
   });
 
-  document.addEventListener('click', () => {
-    dropdown.classList.remove('open');
-    trigger.classList.remove('open');
+  document.addEventListener('click', (e) => {
+    if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove('open');
+      trigger.classList.remove('open');
+    }
   });
 }
 
@@ -956,9 +960,14 @@ function renderB2B() {
   const container = document.getElementById('b2bSections');
   container.innerHTML = '';
 
-  const labs = selectedB2BLabs.length > 0 ? selectedB2BLabs : B2B_LABS;
+  const labs = selectedB2BLabs; // strictly use selected only
   const tier = selectedTier;
   const level = selectedLevel;
+
+  if (labs.length === 0) {
+    container.innerHTML = '<div style="font-size:10px;font-weight:500;color:var(--text-faint);padding:12px 0;">No partner labs selected.</div>';
+    return;
+  }
 
   labs.forEach(lab => {
     const block = document.createElement('div');
@@ -989,9 +998,8 @@ function renderB2B() {
       rowsHTML += `<tr>
         <td>${test['Test Name']}</td>
         <td><span class="badge badge-cat">${test.Category || '—'}</span></td>
-        <td class="num cell-dip">${dip !== null ? '₹'+dip.toLocaleString('en-IN') : '<span class="no-data">—</span>'}</td>
-        <td class="num cell-dsp">${dsp !== null ? '₹'+dsp.toLocaleString('en-IN') : '<span class="no-data">—</span>'}</td>
         <td class="num cell-msp">${msp !== null ? '₹'+msp.toLocaleString('en-IN') : '<span class="no-data">—</span>'}</td>
+        <td class="num cell-dsp">${dsp !== null ? '₹'+dsp.toLocaleString('en-IN') : '<span class="no-data">—</span>'}</td>
         <td class="num cell-mrp">${mrp !== null ? '₹'+mrp.toLocaleString('en-IN') : '<span class="no-data">—</span>'}</td>
         <td>${pctHtml}</td>
       </tr>`;
@@ -1011,9 +1019,8 @@ function renderB2B() {
             <tr>
               <th>Test Name</th>
               <th>Category</th>
-              <th>DIP</th>
-              <th>DSP</th>
               <th>MSP</th>
+              <th>DSP</th>
               <th>MRP</th>
               <th>Margin %</th>
             </tr>
@@ -1024,9 +1031,8 @@ function renderB2B() {
           <tfoot>
             <tr class="total-row">
               <td colspan="2">TOTAL (${selectedTests.length} tests)</td>
-              <td>₹${totalDIP.toLocaleString('en-IN')}</td>
-              <td>₹${totalDSP.toLocaleString('en-IN')}</td>
               <td>₹${totalMSP.toLocaleString('en-IN')}</td>
+              <td>₹${totalDSP.toLocaleString('en-IN')}</td>
               <td>₹${totalMRP.toLocaleString('en-IN')}</td>
               <td>${totalPctHtml}</td>
             </tr>
@@ -1042,7 +1048,12 @@ function renderComp() {
   const container = document.getElementById('compSections');
   container.innerHTML = '';
 
-  const labs = selectedCompLabs.length > 0 ? selectedCompLabs : COMP_LABS;
+  const labs = selectedCompLabs; // strictly use selected only
+
+  if (labs.length === 0) {
+    container.innerHTML = '<div style="font-size:10px;font-weight:500;color:var(--text-faint);padding:12px 0;">No comparison labs selected.</div>';
+    return;
+  }
 
   labs.forEach(lab => {
     const block = document.createElement('div');
